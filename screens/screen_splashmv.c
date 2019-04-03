@@ -239,7 +239,36 @@ static void DrawVTileRO(void* obj) {
 static void DrawCTileRO(void* obj) {
     CTileRO* tile = (CTileRO*)obj;
     
-    //TODO: Draw the crop
+    //TODO: Figure out animation
+    
+    //Draw the crop
+    
+    
+    cropAnimRect.x = 0;
+    cropAnimRect.y = 0;
+    cropAnimRect.width = 64;
+    cropAnimRect.height = 64;
+    
+    rlEnableTexture(crop_arm.id);
+    
+    //rlBegin(RL_QUADS);
+    rlColor4ub(255, 255, 255, 255);
+    rlNormal3f(0.0f, 0.0f, 1.0f);
+
+    rlTexCoord2f((1.0f / (crop_arm.width / 64.0f)) * ((float)cropAnimFrame - 1), 1.0f);
+    rlVertex3f(tile->ro.box.blb.x, tile->ro.box.blb.y, tile->ro.box.blb.z);
+
+    rlTexCoord2f((1.0f / (crop_arm.width / 64.0f)) * (float)cropAnimFrame, 1.0f);
+    rlVertex3f(tile->ro.box.trf.x, tile->ro.box.blb.y, tile->ro.box.blb.z);
+
+    rlTexCoord2f((1.0f / (crop_arm.width / 64.0f)) * (float)cropAnimFrame, 0.0f);
+    rlVertex3f(tile->ro.box.trf.x, tile->ro.box.trf.y, tile->ro.box.blb.z);
+
+    rlTexCoord2f((1.0f / (crop_arm.width / 64.0f)) * ((float)cropAnimFrame - 1), 0.0f);
+    rlVertex3f(tile->ro.box.blb.x, tile->ro.box.trf.y, tile->ro.box.blb.z);
+    //rlEnd();
+    
+    rlDisableTexture();
 }
 
 static void FreeTileRO(void* obj) {
@@ -328,11 +357,19 @@ static void CreateVTiles(RenderList* scene, Vector3 pos, unsigned int info) {
         
         renderer_Add(scene, (RenderObject*)tile);
     }
-    
-
 }
 
-
+static void CreateCTile(RenderList* scene, Vector3 pos, unsigned int info) {
+    Vector3 blb = (Vector3) {pos.x + 0.2f, pos.y, pos.z + 0.5f};
+    Vector3 trf = (Vector3) {pos.x + 0.8f, pos.y + 0.6f, pos.z + 0.5f};
+    
+    CTileRO* tile = (CTileRO*)malloc(sizeof(CTileRO));
+    renderer_InitRenderObject((RenderObject*)tile, blb, trf, DrawCTileRO, FreeCTileRO);
+    
+    tile->info = info;
+    
+    renderer_Add(scene, (RenderObject*)tile);
+}
 
 static void DrawLevel(void) {
     
@@ -598,18 +635,26 @@ void Screen_SplashMV_Init(void) {
     int row = 0;
     int col = 0;
     
+    int cropLastRow = levelCropRow + (sizeof(levelCrops) / sizeof(int)) / levelCropWidth;
+    int cropLastCol = levelCropCol + levelCropWidth - 1;
+    
     for (row = 0; row < (sizeof(level) / sizeof(int)) / levelWidth; row++) {
         for (col = 0; col < levelWidth; col++) {
             int idx = row * levelWidth + col;
+            Vector3 pos = (Vector3) {(float)col, 0.0f, (float)row};
             
             if (level[idx] > 0) {
-                Vector3 pos = (Vector3) {(float)col, 0.0f, (float)row};
-                
                 CreateTile(scene, pos, level[idx]);
                 CreateVTiles(scene, pos, level[idx]);
+            }
+            
+            // Process Crops
+            if ((row >= levelCropRow && col >= levelCropRow) 
+                && (row <= cropLastRow && col <= cropLastCol)) {
                 
-                // Process VTiles
-                //printf("Add tile (row, col) [%d, %d] {%f, %f, %f}\n", row, col, pos.x, pos.y, pos.z);
+                int crop_idx = (row - levelCropRow) * levelCropWidth + (col - levelCropCol);
+                
+                CreateCTile(scene, pos, levelCrops[crop_idx]);
                 
             }
         }
