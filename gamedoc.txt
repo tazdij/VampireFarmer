@@ -1,0 +1,23 @@
+# VampireFarmer
+
+## Game Idea
+
+You are a Vampire who farms. You farm things vampires would want, such
+as succulant Human Body Parts. In the game there should be your farm 
+house, your farming plot, the town with a seed shop, and maybe if time
+permits a market
+
+## GOAL
+
+I have no idea what the end game is yet. So far, just a creepy farming
+game with some hopefully humorous dialog.
+
+## TODO
+
+* Create Art for 1 crops
+* Create Farm Plot Layer (still need to render the actual crop)
+
+* Create a few more ground tiles
+
+* Start on character control
+* Camera move with character
